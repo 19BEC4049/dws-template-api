@@ -21,8 +21,9 @@
             </ee:variables>
         </ee:transform>
         <flow-ref doc:name="Update Employee Reference" doc:id="0cdfbb95-5fdb-47c0-8d47-5dbbea5326c1" name="implementationFlow"/>
+		<logger level="INFO" doc:name="Dinesh Logger " doc:id="babb164f-897a-4371-977b-281be81e23a4" message="#[payload]"/>
     </flow>
-    <flow name="delete:\employees\(id):dws-raml-template-config">
+	<flow name="delete:\employees\(id):dws-raml-template-config">
         <ee:transform doc:name="uriParams Id">
             <ee:variables>
                 <ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
