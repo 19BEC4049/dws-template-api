@@ -1,0 +1,7 @@
+http:
+  port: "8081"
+  path: "/api/*"
+
+api:
+  name: "employee-management-api"
+  version: "v1"

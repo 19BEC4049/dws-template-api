@@ -1,0 +1,269 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+      xmlns="http://www.mulesoft.org/schema/mule/core"
+      xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd 
+        http://www.mulesoft.org/schema/mule/ee/core
+        http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+        http://www.mulesoft.org/schema/mule/core
+        http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+
+    <error-handler name="globalErrorHandler">
+
+        <!-- ========================================================= -->
+        <!-- 400 - BAD REQUEST                                         -->
+        <!-- ========================================================= -->
+        <on-error-propagate type="APIKIT:BAD_REQUEST">
+
+            <logger level="INFO"
+                    doc:name="Log Bad Request"
+                    doc:id="c46f097d-12ac-4e0f-9245-9a4abd44abcd"
+                    message="*** flow: 'employee-management-api' | step: 'error_handler_bad_request' | message: 'Bad request - the request payload or request parameters are invalid' | correlation_id: #[vars.correlationId] ***"/>
+
+            <ee:transform doc:name="APIKIT:BAD_REQUEST">
+
+                <ee:message>
+                    <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+    transaction: correlationId,
+    apiName: p("api.name"),
+    apiVersion: p("api.version"),
+    timestamp: now(),
+    infoMessage:
+        if (!isEmpty(payload.infoMessage))
+            payload.infoMessage
+        else {
+            statusCode: p("response.bad.request.code") as Number,
+            statusMessage: p("response.bad.request.message"),
+            errorType: (error.errorType.namespace default "") ++ ":" ++ (error.errorType.identifier default ""),
+            errorDescription: error.detailedDescription default ""
+        }
+}]]></ee:set-payload>
+                </ee:message>
+
+                <ee:variables>
+                    <ee:set-variable variableName="httpStatus"><![CDATA[400]]></ee:set-variable>
+                </ee:variables>
+
+            </ee:transform>
+
+        </on-error-propagate>
+
+
+        <!-- ========================================================= -->
+        <!-- 404 - NOT FOUND                                           -->
+        <!-- ========================================================= -->
+        <on-error-propagate type="APIKIT:NOT_FOUND">
+
+            <logger level="INFO"
+                    doc:name="Log Resource Not Found"
+                    doc:id="231c6c10-d819-4d43-bf7a-281ace052140"
+                    message="*** flow: 'employee-management-api' | step: 'error_handler_not_found' | message: 'Resource not found - the requested API resource or endpoint does not exist' | correlation_id: #[vars.correlationId] ***"/>
+
+            <ee:transform doc:name="APIKIT:NOT_FOUND">
+
+                <ee:message>
+                    <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+    transaction: correlationId,
+    apiName: p("api.name"),
+    apiVersion: p("api.version"),
+    timestamp: now(),
+    infoMessage:
+        if (!isEmpty(payload.infoMessage))
+            payload.infoMessage
+        else {
+            statusCode: p("response.not.found.code") as Number,
+            statusMessage: p("response.not.found.message"),
+            errorType: (error.errorType.namespace default "") ++ ":" ++ (error.errorType.identifier default ""),
+            errorDescription: error.detailedDescription default ""
+        }
+}]]></ee:set-payload>
+                </ee:message>
+
+                <ee:variables>
+                    <ee:set-variable variableName="httpStatus"><![CDATA[404]]></ee:set-variable>
+                </ee:variables>
+
+            </ee:transform>
+
+        </on-error-propagate>
+
+
+        <!-- ========================================================= -->
+        <!-- 405 - METHOD NOT ALLOWED                                  -->
+        <!-- ========================================================= -->
+        <on-error-propagate type="APIKIT:METHOD_NOT_ALLOWED">
+
+            <logger level="INFO"
+                    doc:name="Log Method Not Allowed"
+                    doc:id="800c314c-18f5-4a53-8568-bdc41c268434"
+                    message="*** flow: 'employee-management-api' | step: 'error_handler_method_not_allowed' | message: 'Method not allowed - the HTTP method is not supported for the requested resource' | correlation_id: #[vars.correlationId] ***"/>
+
+            <ee:transform doc:name="APIKIT:METHOD_NOT_ALLOWED">
+
+                <ee:message>
+                    <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+    transaction: correlationId,
+    apiName: p("api.name"),
+    apiVersion: p("api.version"),
+    timestamp: now(),
+    infoMessage:
+        if (!isEmpty(payload.infoMessage))
+            payload.infoMessage
+        else {
+            statusCode: p("response.method.not.allowed.code") as Number,
+            statusMessage: p("response.method.not.allowed.message"),
+            errorType: (error.errorType.namespace default "") ++ ":" ++ (error.errorType.identifier default ""),
+            errorDescription: error.detailedDescription default ""
+        }
+}]]></ee:set-payload>
+                </ee:message>
+
+                <ee:variables>
+                    <ee:set-variable variableName="httpStatus"><![CDATA[405]]></ee:set-variable>
+                </ee:variables>
+
+            </ee:transform>
+
+        </on-error-propagate>
+
+
+        <!-- ========================================================= -->
+        <!-- 406 - NOT ACCEPTABLE                                      -->
+        <!-- ========================================================= -->
+        <on-error-propagate type="APIKIT:NOT_ACCEPTABLE">
+
+            <logger level="TRACE"
+                    doc:name="Log Not Acceptable"
+                    doc:id="f1c7e03e-3c62-43bd-a621-798c88708a42"
+                    message="*** flow: 'employee-management-api' | step: 'error_handler_not_acceptable' | message: 'Not acceptable - the requested response format is not supported' | correlation_id: #[vars.correlationId] ***"/>
+
+            <ee:transform doc:name="APIKIT:NOT_ACCEPTABLE">
+
+                <ee:message>
+                    <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+    transaction: correlationId,
+    apiName: p("api.name"),
+    apiVersion: p("api.version"),
+    timestamp: now(),
+    infoMessage:
+        if (!isEmpty(payload.infoMessage))
+            payload.infoMessage
+        else {
+            statusCode: p("response.not.acceptable.code") as Number,
+            statusMessage: p("response.not.acceptable.message"),
+            errorType: (error.errorType.namespace default "") ++ ":" ++ (error.errorType.identifier default ""),
+            errorDescription: error.detailedDescription default ""
+        }
+}]]></ee:set-payload>
+                </ee:message>
+
+                <ee:variables>
+                    <ee:set-variable variableName="httpStatus"><![CDATA[406]]></ee:set-variable>
+                </ee:variables>
+
+            </ee:transform>
+
+        </on-error-propagate>
+
+
+        <!-- ========================================================= -->
+        <!-- 415 - UNSUPPORTED MEDIA TYPE                              -->
+        <!-- ========================================================= -->
+        <on-error-propagate type="APIKIT:UNSUPPORTED_MEDIA_TYPE">
+
+            <logger level="INFO"
+                    doc:name="Log Unsupported Media Type"
+                    doc:id="885b451d-9470-4747-96dc-9b3851b8f4bf"
+                    message="*** flow: 'employee-management-api' | step: 'error_handler_unsupported_media_type' | message: 'Unsupported media type - the Content-Type or requested media type is not supported' | correlation_id: #[vars.correlationId] ***"/>
+
+            <ee:transform doc:name="APIKIT:UNSUPPORTED_MEDIA_TYPE">
+
+                <ee:message>
+                    <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+    transaction: correlationId,
+    apiName: p("api.name"),
+    apiVersion: p("api.version"),
+    timestamp: now(),
+    infoMessage:
+        if (!isEmpty(payload.infoMessage))
+            payload.infoMessage
+        else {
+            statusCode: p("response.unsupported.media.type.code") as Number,
+            statusMessage: p("response.unsupported.media.type.message"),
+            errorType: (error.errorType.namespace default "") ++ ":" ++ (error.errorType.identifier default ""),
+            errorDescription: error.detailedDescription default ""
+        }
+}]]></ee:set-payload>
+                </ee:message>
+
+                <ee:variables>
+                    <ee:set-variable variableName="httpStatus"><![CDATA[415]]></ee:set-variable>
+                </ee:variables>
+
+            </ee:transform>
+
+        </on-error-propagate>
+
+
+        <!-- ========================================================= -->
+        <!-- 501 - NOT IMPLEMENTED                                     -->
+        <!-- ========================================================= -->
+        <on-error-propagate type="APIKIT:NOT_IMPLEMENTED">
+
+            <logger level="INFO"
+                    doc:name="Log Not Implemented"
+                    doc:id="569b8910-621c-4ac5-8143-2de1c546386a"
+                    message="*** flow: 'employee-management-api' | step: 'error_handler_not_implemented' | message: 'Not implemented - the requested functionality is not currently supported' | correlation_id: #[vars.correlationId] ***"/>
+
+            <ee:transform doc:name="APIKIT:NOT_IMPLEMENTED">
+
+                <ee:message>
+                    <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+    transaction: correlationId,
+    apiName: p("api.name"),
+    apiVersion: p("api.version"),
+    timestamp: now(),
+    infoMessage:
+        if (!isEmpty(payload.infoMessage))
+            payload.infoMessage
+        else {
+            statusCode: p("response.not.implemented.code") as Number,
+            statusMessage: p("response.not.implemented.message"),
+            errorType: (error.errorType.namespace default "") ++ ":" ++ (error.errorType.identifier default ""),
+            errorDescription: error.detailedDescription default ""
+        }
+}]]></ee:set-payload>
+                </ee:message>
+
+                <ee:variables>
+                    <ee:set-variable variableName="httpStatus"><![CDATA[501]]></ee:set-variable>
+                </ee:variables>
+
+            </ee:transform>
+
+        </on-error-propagate>
+
+    </error-handler>
+
+</mule>
