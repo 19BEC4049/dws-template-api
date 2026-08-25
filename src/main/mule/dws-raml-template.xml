@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd ">
+	<flow name="interface">
+        <http:listener config-ref="dws-raml-template-httpListenerConfig" path="${http.path}">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body><![CDATA[#[payload]]]></http:body>
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:router config-ref="dws-raml-template-config" doc:name="APIkit Router for dws template"/>
+		<error-handler ref="globalErrorHandler" />
+       
+    </flow>
+    <flow name="put:\employees\(id):application\json:dws-raml-template-config">
+        <ee:transform doc:name="URI params ID">
+            <ee:variables>
+                <ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <flow-ref doc:name="Update Employee Reference" doc:id="0cdfbb95-5fdb-47c0-8d47-5dbbea5326c1" name="implementationFlow"/>
+    </flow>
+    <flow name="delete:\employees\(id):dws-raml-template-config">
+        <ee:transform doc:name="uriParams Id">
+            <ee:variables>
+                <ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+		<ee:transform doc:name="delete employee response">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  code: "BAD_REQUEST",
+  message: "Invalid request.",
+  description: "The request contains invalid data."
+} as Object {encoding: "UTF-8", mediaType: "application/json"}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+    </flow>
+	<flow name="get:\employees:dws-raml-template-config">
+        <ee:transform doc:name="Get response">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+[
+  {
+    employee: {
+      number: "EP0000",
+      name: "Employee Name",
+      fullName: "Employee Full Name",
+      email: "employee@example.com"
+    },
+    department: {
+      code: "0700000",
+      description: "Integration Specialist"
+    }
+  }
+] as Array {encoding: "UTF-8", mediaType: "application/json"}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+    </flow>
+    <flow name="get:\health-check:dws-raml-template-config">
+        <ee:transform doc:name="Health check response">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  apiStatus: "running",
+  apiName: p("api.name"),
+  apiVersion: p("api.version"),
+  timestamp:  now(),
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+    </flow>
+	<flow name="get:\employees\(id):dws-raml-template-config">
+        <ee:transform doc:name="URI params ID">
+            <ee:variables>
+                <ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <ee:transform doc:name="response for selective id">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  employee: {
+    number: "EP0000",
+    name: "Employee Name",
+    fullName: "Employee Full Name",
+    email: "employee@example.com"
+  },
+  department: {
+    code: "0700000",
+    description: "Integration Specialist"
+  }
+} as Object {encoding: "UTF-8", mediaType: "application/json"}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+    </flow>
+    <flow name="post:\employees:application\json:dws-raml-template-config">
+        <logger level="INFO" doc:name="Logger" doc:id="74aa6c70-0bb8-48b3-b5dc-99fce188186d" message="#[payload]"/>
+		<ee:transform doc:name="Employee Response">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  employee: {
+    number: "EP0000",
+    name: "Employee Name",
+    fullName: "Employee Full Name",
+    email: "employee@example.com"
+  },
+  department: {
+    code: "0700000",
+    description: "Integration Specialist"
+  }
+} as Object {encoding: "UTF-8", mediaType: "application/json"}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+		<ee:transform doc:name="Transform Message" doc:id="ef4156f9-8396-494f-a369-d74838b8a510" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+
+var employeeNumberFunction =
+    readUrl(
+        "classpath://dataweaves/employee-number.dwl",
+        "application/dw"
+    )
+
+---
+employeeNumberFunction(payload)]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="0984cf44-dadb-4875-bbd2-45d9e624c032" message="#[payload]" />
+		<ee:transform doc:name="Transform Message" doc:id="0963cd39-4221-4c79-ac83-2ad6ee8b6cb9" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	ans : payload.targetNumber
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+    </flow>
+</mule>
